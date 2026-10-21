@@ -55,6 +55,50 @@ export default function Portal() {
     [error, setError] = useState(""),
     [mobile, setMobile] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
+  const sidebar = useRef<HTMLElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!mobile) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusable = () =>
+      Array.from(
+        sidebar.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex="0"]',
+        ) || [],
+      );
+    focusable()[0]?.focus();
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMobile(false);
+      }
+      if (event.key === "Tab") {
+        const items = focusable();
+        const first = items[0],
+          last = items[items.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    const breakpoint = window.matchMedia("(min-width: 801px)");
+    const resized = () => {
+      if (breakpoint.matches) setMobile(false);
+    };
+    document.addEventListener("keydown", keydown);
+    breakpoint.addEventListener("change", resized);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", keydown);
+      breakpoint.removeEventListener("change", resized);
+      menuButton.current?.focus({ preventScroll: true });
+    };
+  }, [mobile]);
   const manage = actor.role !== "trainer";
   useEffect(() => {
     if (modal || receipt) dialog.current?.showModal();
@@ -151,7 +195,31 @@ export default function Portal() {
   }
   return (
     <div className="admin-shell">
-      <aside className={mobile ? "sidebar show" : "sidebar"}>
+      {mobile && (
+        <button
+          type="button"
+          className="menu-backdrop"
+          aria-label="Close navigation backdrop"
+          tabIndex={-1}
+          onClick={() => setMobile(false)}
+        />
+      )}
+      <aside
+        ref={sidebar}
+        id="workspace-navigation"
+        className={mobile ? "sidebar show" : "sidebar"}
+        role={mobile ? "dialog" : undefined}
+        aria-modal={mobile ? true : undefined}
+        aria-label="Workspace navigation"
+      >
+        <button
+          type="button"
+          className="drawer-close"
+          aria-label="Close navigation"
+          onClick={() => setMobile(false)}
+        >
+          <X size={22} />
+        </button>
         <Link className="rep-brand" href="/admin">
           <Dumbbell size={25} />
           RepDesk
@@ -216,11 +284,14 @@ export default function Portal() {
           </div>
         </div>
       </aside>
-      <div className="admin-main">
+      <div className="admin-main" inert={mobile}>
         <header>
           <div>
             <button
               aria-label="Toggle navigation"
+              ref={menuButton}
+              aria-expanded={mobile}
+              aria-controls="workspace-navigation"
               className="iconbtn mobilemenu"
               onClick={() => setMobile(!mobile)}
             >
