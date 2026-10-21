@@ -2,6 +2,31 @@
 
 A neutral, fictional gym sales demo: a public website and working management workspace in one Next.js + TypeScript project. Dark graphite/lime website, light operations dashboard. No required environment variables.
 
+## Admin login: demo now, passwords after Supabase
+
+**Current demo: no password is required.** Open `/admin` and use **Preview role** to demonstrate Owner, Receptionist or either Trainer. There is no default admin email/password because authentication has not been implemented in this version.
+
+This is intentional while Supabase setup is deferred. The role switcher is a presentation feature, not secure RBAC. It must not be used to protect real gym data.
+
+| Stage | How the admin enters |
+| --- | --- |
+| Current browser-only demo | Open `/admin`; choose a preview role. No account or password. |
+| Future Supabase-connected version | Sign in using an individual staff email and password, with the assigned role enforced on the server and in the database. This stage is not implemented yet. |
+
+### First admin when Supabase is added
+
+These are the requirements for the next implementation, not steps that enable login in the current demo:
+
+1. Create a dedicated RepDesk Supabase project and apply the gym-specific database/auth schema once it is implemented.
+2. Create the initial owner in **Supabase Authentication → Users** using your chosen email and a strong, unique password of at least 12 characters.
+3. Link that Auth user's ID to the protected gym staff profile with the `owner` role, using the setup SQL/script supplied with that integration.
+4. Configure the app's public connection settings and server-only key in the hosting environment, then redeploy.
+5. Once the protected login route is implemented, sign in with the chosen email/password. The owner will then create individual receptionist/trainer accounts through the owner-only staff screen.
+
+A migration alone does not create an Auth user or choose a password. A server secret/API key is not an admin login password. The gym staff schema, production login route, password recovery and staff-creation screen are still part of that future Supabase phase. Do not assume SalonDesk's existing auth tables or setup script apply to this repo.
+
+Do not commit passwords, secret keys or real gym data. Use sample information in this demo.
+
 ## Run
 
 Node.js 20.9+ required.
