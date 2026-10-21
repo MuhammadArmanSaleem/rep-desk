@@ -105,7 +105,16 @@ export default function Portal() {
     else dialog.current?.close();
   }, [modal, receipt]);
   if (!data)
-    return <div className="loading">Preparing your training floor…</div>;
+    return (
+      <div className="loading" role="status">
+        <div className="loading-bars" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+        Preparing your training floor…
+      </div>
+    );
   const visible = access(data, actor);
   const member = (id: string) => data.members.find((m) => m.id === id);
   const trainer = (id: string) =>
@@ -326,7 +335,7 @@ export default function Portal() {
           DEMO MODE · Sample data on this browser · Role previews are not real
           authentication
         </div>
-        <main>
+        <main key={tab} className="workspace-view">
           <div className="admin-heading">
             <div>
               <span className="eyebrow">FORM & IRON / OPERATIONS</span>
