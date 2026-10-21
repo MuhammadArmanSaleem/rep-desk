@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Data, seed } from "./model";
+import { isDemoData } from "./storage-data";
 const key = "repdesk:demo:v1";
 export function useDemo() {
   const [data, setData] = useState<Data | null>(null),
@@ -10,13 +11,7 @@ export function useDemo() {
       try {
         const raw = localStorage.getItem(key);
         const d = raw ? JSON.parse(raw) : seed();
-        if (
-          d.version !== 1 ||
-          !["members", "memberships", "payments", "trials", "messages"].every(
-            (k) => Array.isArray(d[k]),
-          )
-        )
-          throw Error();
+        if (!isDemoData(d)) throw Error();
         setData(d);
       } catch {
         setData(seed());

@@ -96,6 +96,8 @@ export function addDays(date: string, days: number) {
   return d.toISOString().slice(0, 10);
 }
 export const phone = (v: string) => {
+  if (!/^[+0-9\s()\-]+$/.test(v))
+    throw Error("Enter a valid phone number without letters.");
   const p = v.replace(/[^0-9]/g, "");
   const n = p.startsWith("0") ? "92" + p.slice(1) : p;
   if (!/^92\d{10}$/.test(n))
@@ -305,8 +307,8 @@ export function command(data: Data, actor: Actor, c: Command): Data {
       );
     if (c.status === "Joined")
       throw Error("Use convert to create a membership.");
-    if (c.trainerId) {
-      if (!trainers.some((x) => x.id === c.trainerId))
+    if (c.trainerId !== undefined) {
+      if (c.trainerId && !trainers.some((x) => x.id === c.trainerId))
         throw Error("Choose a trainer.");
       t.trainerId = c.trainerId;
     }

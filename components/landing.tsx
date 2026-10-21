@@ -15,10 +15,11 @@ export default function Landing() {
   const { data, save, warning } = useDemo();
   const [kind, setKind] = useState<"trial" | "message">("trial"),
     [notice, setNotice] = useState(""),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [submitted, setSubmitted] = useState(false);
   function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!data) return;
+    if (!data || submitted) return;
     setError("");
     setNotice("");
     const form = e.currentTarget;
@@ -64,6 +65,10 @@ export default function Landing() {
           setNotice(
             "Demo trial saved. Open the management demo → Trials to confirm it. This is not a real gym booking.",
           );
+        else
+          throw Error(
+            "Could not save. Your details have been kept; check browser storage and retry.",
+          );
       } else {
         const text = get("message");
         if (text.length < 10)
@@ -86,8 +91,13 @@ export default function Landing() {
           setNotice(
             "Demo message saved. View it in the management inbox on this browser.",
           );
+        else
+          throw Error(
+            "Could not save. Your details have been kept; check browser storage and retry.",
+          );
       }
       form.reset();
+      setSubmitted(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unable to save.");
     }
@@ -353,6 +363,7 @@ export default function Landing() {
                 className={kind === "trial" ? "selected" : ""}
                 onClick={() => {
                   setKind("trial");
+                  setSubmitted(false);
                   setNotice("");
                   setError("");
                 }}
@@ -363,6 +374,7 @@ export default function Landing() {
                 className={kind === "message" ? "selected" : ""}
                 onClick={() => {
                   setKind("message");
+                  setSubmitted(false);
                   setNotice("");
                   setError("");
                 }}
@@ -370,7 +382,11 @@ export default function Landing() {
                 Ask a question
               </button>
             </div>
-            <form key={kind} onSubmit={submit}>
+            <form
+              key={kind}
+              onSubmit={submit}
+              onChange={() => setSubmitted(false)}
+            >
               <div className="formrow">
                 <label>
                   Your name
@@ -446,7 +462,10 @@ export default function Landing() {
                   {notice}
                 </p>
               )}
-              <button disabled={!data} className="button lime full">
+              <button
+                disabled={!data || submitted}
+                className="button lime full"
+              >
                 {kind === "trial"
                   ? "Save demo trial request"
                   : "Save demo message"}

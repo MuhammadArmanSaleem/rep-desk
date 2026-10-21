@@ -83,3 +83,62 @@ test("trial conversion creates member and period once", () => {
     }),
   );
 });
+
+import { isDemoData } from "./storage-data";
+test("damaged saved records are rejected before rendering", () => {
+  const d = seed();
+  assert.equal(isDemoData(d), true);
+  assert.equal(isDemoData({ ...d, members: [null] }), false);
+  assert.equal(
+    isDemoData({ ...d, members: [{ ...d.members[0], name: 3 }] }),
+    false,
+  );
+  assert.equal(
+    isDemoData({ ...d, payments: [{ ...d.payments[0], amount: Infinity }] }),
+    false,
+  );
+  assert.equal(
+    isDemoData({
+      ...d,
+      memberships: [{ ...d.memberships[0], end: "bad-date" }],
+    }),
+    false,
+  );
+});
+test("coach can be cleared on a new trial but not on a confirmed session", () => {
+  const d = seed();
+  const n = command(d, owner, {
+    type: "trial-status",
+    id: "t1",
+    status: "New",
+    trainerId: "",
+  });
+  assert.equal(n.trials[0].trainerId, "");
+  assert.throws(
+    () =>
+      command(d, owner, {
+        type: "trial-status",
+        id: "t1",
+        status: "Confirmed",
+        trainerId: "",
+      }),
+    /Assign a trainer/,
+  );
+});
+test("phone input rejects letters instead of stripping them", () => {
+  assert.throws(
+    () =>
+      command(seed(), owner, {
+        type: "member",
+        planId: "open",
+        member: {
+          id: "new",
+          name: "Someone",
+          phone: "abc03001234567",
+          trainerId: "trainer-1",
+          goal: "fitness",
+        },
+      }),
+    /letters/,
+  );
+});
